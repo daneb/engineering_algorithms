@@ -6,20 +6,25 @@ fn main() {
     let mut arr : Vec<i32> = vec![1,3,5,2,7,8,4];
     let left = 0;
     let right = arr.len() - 1;
-    let result = quicksort(&mut arr, left, right as i32);
+    let result = quicksort(&mut arr, left, right as i32, &mut 0);
     println!("{:?}", result);
 }
 
-fn quicksort(arr : &mut Vec<i32>, left : i32, right : i32) -> &Vec<i32> {
-    if left >= right { return arr };
+fn quicksort(arr : &mut Vec<i32>, left : i32, right : i32, compares : &mut i32) -> i32 {
+
+    if left >= right { return *compares };
 
     let pivot = arr[((left + right)/2) as usize];
     let index = partition(arr, left, right, pivot);
+    
+    *compares = *compares + (index - 1);
+    println!("a: {}", *compares);
+    quicksort(arr, left, index - 1, compares);
+    *compares = *compares + (index - 1);
+    println!("b: {}", *compares);
+    quicksort(arr, index, right, compares);
 
-    quicksort(arr, left, index - 1);
-    quicksort(arr, index, right);
-
-    return arr;
+    return *compares;
 
 }
 
