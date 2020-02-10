@@ -6,47 +6,45 @@ use std::io::prelude::*;
 use std::fs::File;
 
 fn main() {
-    let mut arr : Vec<i32> = read_file_to_sort().unwrap().into();
+    //let mut arr : Vec<i32> = read_file_to_sort().unwrap().into();
+    let mut arr : Vec<i32> =vec![ 3, 8, 2, 5, 1, 4, 7, 6 ];
     let left = 0;
     let right = arr.len() - 1;
-    let result = quicksort(&mut arr, left, right as i32, &mut 0);
-    println!("{:?}", result);
+    quicksort(&mut arr, left, right as i32);
 }
 
-fn quicksort(arr : &mut Vec<i32>, left : i32, right : i32, compares : &mut i32) -> i32 {
+fn quicksort(arr : &mut Vec<i32>, left : i32, right : i32) {
 
-    if left >= right { return *compares };
+    if left < right {
 
-    let pivot = arr[((left + right)/2) as usize];
-    let index = partition(arr, left, right, pivot);
+        let pi = partition(arr, left, right);
     
-    *compares = *compares + (index - 1);
-    println!("a: {}", *compares);
-    quicksort(arr, left, index - 1, compares);
-    *compares = *compares + (right - 1);
-    println!("b: {}", *compares);
-    quicksort(arr, index, right, compares);
-
-    return *compares;
+        quicksort(arr, left, pi);
+        quicksort(arr, pi + 1, right);
+    }
 
 }
 
-fn partition(arr : &mut Vec<i32>, mut left : i32, mut right : i32, pivot : i32) -> i32  {
-    while left <= right {
-        while arr[left as usize] < pivot && left <= right {
-            left = left + 1;
-        }
-        while arr[right as usize] > pivot {
-            right = right - 1;
-        }
+// Two boundaries:
+// j = what we looked at so far, and what we haven't looked at
+// i = from what we've seen, where are those left that are less then the pivot,
+//     and those to the right greater then the pivot
+// ~ pursuing linear time
+fn partition(arr : &mut Vec<i32>, left : i32, right : i32) -> i32 {
 
-        if left <= right {
-            arr.swap(left as usize, right as usize);
-            left = left + 1;
-            right = right - 1;
-        }
-    }
-    return left;
+   let pivot : i32 = arr[left as usize];
+   let mut i : i32 = left + 1;
+
+   for j in (left + 1)..right {
+       if arr[j as usize] < pivot {
+        arr.swap(j as usize, i as usize);
+        i = i + 1;
+       }
+   }
+
+   arr.swap(left as usize, (i - 1) as usize);
+
+   return i;
 }
 
 fn read_file_to_sort() -> Result<Vec<i32>, io::Error> {
