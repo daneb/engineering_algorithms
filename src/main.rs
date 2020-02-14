@@ -1,69 +1,62 @@
+// https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme
+// https://itnext.io/a-sort-of-quick-guide-to-quicksort-and-hoares-partitioning-scheme-in-javascript-7792112c6d1
+// In place = An algorithm in which the data that is being operated on does not leave its data structure.
+use std::{
+    fs::File,
+    io::{prelude::*, BufReader},
+    path::Path,
+};
+
+
+static mut COMPARISONS: i32 = 0;
+
 fn main() {
-    let mut a : [i32; 5] = [ 2, 4, 1, 3, 5 ];
-    let (result, inversion) = merge_sort(&mut a);
-    println!("{:?}", result);
-    println!("Inversion: {}", inversion)
+    let mut arr : Vec<i32> = read_file_to_sort();
+    println!("{}", arr.len());
+    //let mut arr : Vec<i32> =vec![ 3, 8, 2, 5, 1, 4, 7, 6 ];
+    let left = 0;
+    let right = arr.len() - 1;
+    quicksort(&mut arr, left as i32, right as i32);
+    unsafe { println!("{}", COMPARISONS); }
 }
 
-fn merge_sort(array_to_sort : &mut [i32]) -> (Vec<i32>, i64) {
+fn quicksort(arr : &mut Vec<i32>, left : i32, right : i32) {
 
-    if array_to_sort.len() == 1 { return (array_to_sort.to_vec(), 0) };
-    
-    let (left, right) = array_to_sort.split_at_mut(array_to_sort.len() / 2);
-
-    let (part1, count1) = merge_sort(left);
-    let (part2, count2) = merge_sort(right);
-
-    println!("{:?}", part1);
-    println!("{:?}", part2);
-
-    println!("{:?}", count1);
-    println!("{:?}", count2);
-
-    let inversion = count1 + count2;
-
-    let (result, count) = merge(&mut part1.to_vec(), &mut part2.to_vec());
-
-    println!("{}", inversion);
-    println!("{}", count);
-
-    return (result, inversion + count);
-
-}
-
-fn merge(left : &mut Vec<i32>, right : &mut Vec<i32>)  -> (Vec<i32>, i64)
-{
-    let capacity : usize = left.len() + right.len();
-    let mut v : std::vec::Vec<i32> = Vec::with_capacity(capacity);
-    let (mut left_idx ,mut right_idx) = (0, 0);
-    let mut inversion_count : i64 = 0;
-
-    while left_idx < left.len() && right_idx < right.len()
-    {
-        if left[left_idx] <= right[right_idx] {
-            v.push(left[left_idx]);
-            left_idx += 1;
-        } else {
-            v.push(right[right_idx]);
-            right_idx += 1;
-            // The distance of the swap 
-            // Merge sort does "split" inversions
-            // This is more along the lines of insertion sort.
-            inversion_count += (left.len() as i64) - (left_idx as i64);
-        }
-
-    } 
-
-    while left_idx < left.len() {
-        v.push(left[left_idx]);
-        left_idx += 1;
+    if left >= right { 
+        return;
     }
 
-    while right_idx < right.len() {
-        v.push(right[right_idx]);
-        right_idx += 1;
-    };
+    // Pick pivot element
+    let pivot = arr[left as usize];
 
-    return (v, inversion_count);
-    
+    // Update comparisons
+    unsafe { COMPARISONS += right - left; }
+
+    // Partition
+    let mut i : i32 = left + 1;
+    for j in (left + 1)..(right + 1) {
+        if arr[j as usize] < pivot {
+         arr.swap(i as usize, j as usize);
+         i += 1;
+        }
+    }
+    arr.swap(left as usize, (i - 1) as usize);
+
+    // Recursive Calls
+    quicksort(arr, left, i-2);
+    quicksort(arr, i, right);
+
+    // answers tried: 176404400 | 58893 | 176463294 | 1910516808 | 162085
+
+}
+
+fn read_file_to_sort() -> Vec<i32> {
+    let file = File::open("QuickSort.txt").expect("no such file");
+    let buf : Vec<i32> = BufReader::new(file)
+        .lines()
+        .map(|l| l.expect("Could not parse line"))
+        .map(|f| f.parse::<i32>().unwrap())
+        .collect();
+
+    return buf;
 }
