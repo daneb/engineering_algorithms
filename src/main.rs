@@ -1,15 +1,18 @@
 // https://en.wikipedia.org/wiki/Quicksort#Hoare_partition_scheme
 // https://itnext.io/a-sort-of-quick-guide-to-quicksort-and-hoares-partitioning-scheme-in-javascript-7792112c6d1
 // In place = An algorithm in which the data that is being operated on does not leave its data structure.
-use std::io;
-use std::io::prelude::*;
-use std::fs::File;
+use std::{
+    fs::File,
+    io::{prelude::*, BufReader},
+    path::Path,
+};
+
 
 static mut COMPARISONS: i32 = 0;
 
-
 fn main() {
-    let mut arr : Vec<i32> = read_file_to_sort().unwrap().into();
+    let mut arr : Vec<i32> = read_file_to_sort();
+    println!("{}", arr.len());
     //let mut arr : Vec<i32> =vec![ 3, 8, 2, 5, 1, 4, 7, 6 ];
     let left = 0;
     let right = arr.len() - 1;
@@ -23,11 +26,21 @@ fn quicksort(arr : &mut Vec<i32>, left : i32, right : i32) {
         return;
     }
 
+    // Pick pivot element
+    let pivot = arr[left as usize];
+
     // Update comparisons
-    unsafe { COMPARISONS += (right - left); }
+    unsafe { COMPARISONS += right - left; }
 
     // Partition
-    let i = partition(arr, left, right);
+    let mut i : i32 = left + 1;
+    for j in (left + 1)..(right + 1) {
+        if arr[j as usize] < pivot {
+         arr.swap(i as usize, j as usize);
+         i += 1;
+        }
+    }
+    arr.swap(left as usize, (i - 1) as usize);
 
     // Recursive Calls
     quicksort(arr, left, i-2);
@@ -37,32 +50,13 @@ fn quicksort(arr : &mut Vec<i32>, left : i32, right : i32) {
 
 }
 
-// Two boundaries:
-// j = what we looked at so far, and what we haven't looked at
-// i = from what we've seen, where are those left that are less then the pivot,
-//     and those to the right greater then the pivot
-// ~ pursuing linear time
-fn partition(arr : &mut Vec<i32>, left : i32, right : i32) -> i32 {
+fn read_file_to_sort() -> Vec<i32> {
+    let file = File::open("QuickSort.txt").expect("no such file");
+    let buf : Vec<i32> = BufReader::new(file)
+        .lines()
+        .map(|l| l.expect("Could not parse line"))
+        .map(|f| f.parse::<i32>().unwrap())
+        .collect();
 
-   let pivot : i32 = arr[left as usize];
-   let mut i : i32 = left + 1;
-
-   for j in (left + 1)..(right + 1) {
-       if arr[j as usize] < pivot {
-        arr.swap(j as usize, i as usize);
-        i += 1;
-       }
-   }
-
-   arr.swap(left as usize, (i - 1) as usize);
-}
-
-fn read_file_to_sort() -> Result<Vec<i32>, io::Error> {
-    let mut f = File::open("QuickSort.txt")?;
-    let mut buffer = Vec::new();
-
-    match f.read_to_end(&mut buffer) {
-        Ok(_) => Ok(buffer.into_iter().map(|value| value as i32).collect()),
-        Err(e) => Err(e),
-    }
+    return buf;
 }
